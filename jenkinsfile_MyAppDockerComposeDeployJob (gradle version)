@@ -11,12 +11,17 @@ node {
     stage("Checkout from SCM"){
         git branch: 'main', credentialsId: 'gitlab_idpwd', url: 'http://192.168.15.20/root/myapp.git'
     }
-    stage("Build Application"){
-        sh "mvn clean package"
+    
+    stage("실행권한 추가 : ./gradlew"){
+        sh "chmod 755 gradlew"
     }
-    stage("Test Application"){
-        sh "mvn test"
+    stage("clean and build ") {
+        sh "./gradlew clean bootJar"
+    }  
+    stage("Test") {
+        sh "./gradlew test"
     }
+
     stage("Build Docker Image") {
     	docker_image = docker.build "${IMAGE_NAME}:${IMAGE_TAG}"        
     }

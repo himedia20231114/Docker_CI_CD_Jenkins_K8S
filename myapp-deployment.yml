@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: myapp-web
-          image: dennis1945/myapp
+          image: Docker_HUB_ID/myapp
           ports:
             - containerPort: 8080
           env:
