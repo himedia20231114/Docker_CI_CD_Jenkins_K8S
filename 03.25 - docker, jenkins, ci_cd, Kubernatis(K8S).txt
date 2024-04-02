@@ -1,0 +1,578 @@
+1. Docker
+2. Kubernetis (K8S) 
+3. CI_CD
+4. Jenkins
+5. GitLAB  
+==============================================
+step 1 : 옆의 시스템에서 실습 ( Win10 professional ) 
+	컴퓨터 관리 : compmgmt.msc
+   user1 
+   1234 
+step 2. : 계정의 administrators (최고 관리자 권한)을 부여 : 원격 접속 
+  administrators 그룹에 user1 계정을 포함. 
+step 3 : 원격 접속을 허용  
+  원격 데스크톱 : 켬 (활성화) 
+step 4 : 
+  ipconfig /all	<== 192.168.0.x  
+step 5 : 
+  mstsc /v:192.168.0.x 
+
+  user1
+  1234 
+
+  환경설정 <= 홈폴더 , 다음, 다음. 마침 (c:\user\user1)
+step 6 : 구글 크롬 설치 
+step 7 : 실습 파일 다운 로드 
+   https://url.kr/6k8qd9 
+	himedia1234
+	
+===========================================================
+1. 가상화 프로그램 설치 : Virtual Box ,   Vmware Player, Hyper-V 
+  VirtualBox : https://www.virtualbox.org/wiki/Downloads
+    다음 => 다음 => 마침 
+2. VM의 기본 저장 경로 : c:\VMs  폴더로 설정 
+3. VM 에서 사용할 가상의 네트워크 생성 : NAT (VM이 인터넷이 가능하도록 하는 네트워크 ) :
+    - 도구 ==> 네트워크 => NAT 네트워크 (선택) => (새로만들기) 
+    -  NatNetwork (오른쪽 클릭) => 속성 => 
+    - 192.168.15.0/24 , DHCP 활성 (체크해제) 
+4. Ubuntu Linux 설치 : Template 서버    ,  Desktop (Client, GUI) , Server ( Server, GUI x) 
+    - 머신(VM) ==> 새로 만들기 
+    - Ubuntu , 자동설치 체크 해제, CPU : 2개, RAM : 4096MB, HDD : 100GB ,===>  마침 
+    - VM (오른쪽 클릭) => 설정 => 네트워크 =>  Nat 네트워크 : NatNetwork   설정 <<중요>> , 고급 : MAC Address 가 각 VM 고유 
+5. 호스트 조합 변경 : Rights Ctrl  ===>   ctrl + alt      ,   커서 위치 변경 : VM   ==> ctrl + alt  ==> Host 
+   - 파일 =>  환경설정 => 입력 => 가상머신 => 호스트 키 조합 (ctrl + alt) 
+
+6. Ubuntu Server 설치 , TUI 
+  - Language : English 
+  - KeyBoard : English 
+  - Install Type : Ubuntu Server	<== 기본값 , 
+  - Network 구성 : DHCP <== 기본값 (수정)     <== 고정 IP 로 구성 
+	ipv4 ==> 편집(manual) 
+
+	manual 		< == 고정 IP Setting 
+	subnet : 192.168.15.0/24	address : 192.168.15.100
+	gateway : 192.168.15.1
+	name Server : 8.8.8.8
+   - Proxy Address  :    다음 
+   - mirror  : 다음
+   - storage 구성 :  다음 , 다음.  << contunue >>   <== 자동으로 파티션 나누고 포멧을 자동으로 함,. 
+   - 사용자 셋팅 
+	이름 : user1
+	서버네임 : ubuntu
+        계정명 : user1
+	암호 : 1234
+   - ubuntu pro 버젼으로 업그레이드 : skip    , 다음 
+   - ssh 설치 <=== 체크 반드시함.  <=== 주의 
+   - 추가적인 설치 프로그램  , 다음. 
+   - reboot now 
+   - cd-rom  <== Enter , Enter 
+
+===================================================================================
+7. SSH를 통한 원격 관리 : putty , super putty 
+
+   - ssh 설치 확인 ;  sudo systemctl status ssh 
+   - IP Address    :   ip addr 
+
+   - Host 에서 putty 설치  
+   - Host 에서 super putty 설치	<== 하나의 창에서 많은 서버를 관리 (putty)  
+	- 실행 : c:\program files\putty\putty.exe    등록 
+	
+   - 포트 포워딩 :   <== Virtual Box : NatNetwork 설정  
+	Host (localhost) : 22100  ==> ubuntu VM ( 192.168.15.100 ) : 22  
+
+   - super putty 에서 접속 
+       host : localhost:22100     user : user1  
+
+   - putty session 등록 
+	ubuntu 
+	localhost    
+	22100
+	user1 
+
+8. ubuntu 에 기본 설정    <== Template VM 생성완료 
+   - sudo apt install net-tools	<== ifconfig  
+   - sudo apt install iputils-ping      <== ping 
+   - sudo apt install network-manager  <== nmtui     : TCP/IP : IP, S/M, G/W, DNS 
+   // 클라우드에 등록창을 뜨우지 않도록 설정 
+	sudo apt-get purge cloud-init
+	sudo rm -rf /etc/cloud/ && sudo rm -rf /var/lib/cloud/
+   
+   - 종료 : sudo init 0 
+
+9. ubuntu VM을 복제 , gitlab, jenkins, k8s-control
+   - 주의 : VM 복제시 MAC Address 를 다르게 설정 <새로운 MAC 주소 생성 : 선택> 
+
+10. 복제된 시스템의 : 컴퓨터이름(hostname), IP , /etc/hosts (DNS 역활 : 컴퓨터이름 ==> IP Address 로 변환 ) 를 각각 다르게 셋팅 
+	gitlab, jenkins, k8s-contorl  에서 동일 하게 셋팅 
+
+   - cat /etc/hostname	<== vi 컴퓨터 이름 변경, 리부팅 필요 
+   - cat /etc/netplan/00-installer-config.yaml 			<=== ip Address ( ifconfig ) 
+
+   - cat /etc/hosts		<== vi 컴퓨터이름 ==> IP Address 
+
+   // 컴퓨터 이름 변경 
+   sudo su 
+   vi /etc/hostname               		<== gitlab 
+  
+   // IP Address 변경 
+   vi /etc/netplan/00-installer-config.yaml	<== 192.168.15.20
+
+   // hosts 파일 추가 
+   printf "\n192.168.15.93 k8s-control\n192.168.15.94 k8s-1\n192.168.15.95 k8s-2\n192.168.15.10 windev\n192.168.15.20 gitlab\n192.168.15.30 jenkins\n" >> /etc/hosts
+   
+   // 리부팅 
+   sudo init 6 
+
+   // 포트 포워딩 : 
+   gitlab   localhost   22020      192.168.15.20   22
+    
+   // super putty 에세 세션 생성 : gitlab , jenkins, k8s-control 
+
+11. windev VM 생성 : windows 10 설치, JDK 17, STS4, VSCode, 
+   - 머신 이름 : windev
+   - 주의 : 무인설치 하지 않도록 
+   - cpu : 2, ram : 4GB, hdd : 100GB
+   - windows pro   <== 
+   - 사용자 설치  <== upgrade x 
+   - 설치 완료, 기본 설정 완료.  user1 , 1234
+
+   - 게스트 확장 : HOST , Guset 사이의 매끄럽게 처리, 해상도, 클립보드 복제 
+	장치 == > 게스트 확장 cd 이미지 삽입 , d:\VBoxWindowsAdditions-amd64.exe 실행 
+        장치 ==> 게스트 확장 업그레이드
+        장치 ==> 클립보드 공유 ==> 양방향     <== Host <===> Guest   복사, 붙여넣기  
+
+   - TCP/IP Setting : ncpa.cpl
+	- IP Address 	: 192.168.15.10
+	- Subnet Mask 	: 255.255.255.0
+	- Gateway	: 192.168.15.1
+	- DNS  		: 8.8.8.8
+
+   - ping 8.8.8.8		<== 인터넷이 잘 되는지 확인 
+
+   - 크롬  설치 		https://www.google.com/intl/ko_kr/chrome/
+   - JDK 17 설치 	https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html
+   - STS4 이클립스 	https://spring.io/tools
+   - vscode 설치 		https://code.visualstudio.com/Download
+
+
+12. gitlab 서버를 설치, <== GitHub 서버를 local VM 에서 지원해줌. 
+
+  // gitlab 설치 
+  sudo apt-get update
+  sudo apt-get install -y curl openssh-server ca-certificates tzdata perl
+  curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh | sudo bash
+  sudo apt-get install gitlab-ce
+
+  // gitlab 설정 :  /etc/gitlab/gitlab.rb 파일의 external_url 변수의 값을 셋팅 ,   반드시 설정 
+  sudo su 
+  vi /etc/gitlab/gitlab.rb
+	32번 라인 수정  ====>  external_url 'http://192.168.15.20'	
+  sudo gitlab-ctl reconfigure        // 리부팅 없이 설정된 내용을 다시로드 
+
+  // 초기 관리자 계정, 암호  
+  root 
+  cat /etc/gitlab/initial_root_password	
+
+
+  // 접속 : windev
+  http://192.168.15.20          
+      root 
+      암호 
+
+  // root 계정의 암호 변경 : Pa$$w0rd    <== 암호를 복잡하게 구성 , 대문자, 소문자, 특수문자, 숫자 
+	아이콘 클릭(왼쪽 상단)  ==> preperances => password 
+  
+ 
+  // 레파지토리 생성 
+    - creat project => create blank project => 
+	
+
+13. jenkins VM : jenkins ( 2.451 ) 설치, docker 설치     <=== 권장 RAM : 8GB, CPU : 4, HDD : 50GB 
+	https://www.jenkins.io/doc/book/installing/linux/
+   - JDK 17 이상이 설치되어야 jenkins 를 설치 할 수 있다. 
+
+  // JDK17 설치 
+  sudo apt update
+  sudo apt install fontconfig openjdk-17-jre
+  java -version
+
+  // jenkins 설치 ( LTS 버젼 설치 ( 2.451 )  ) 
+  sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \
+  https://pkg.jenkins.io/debian/jenkins.io-2023.key
+
+  echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+  https://pkg.jenkins.io/debian binary/ | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
+
+  sudo apt-get update
+
+  sudo apt-get install jenkins
+
+  //설치 확인 
+  sudo systemctl status jenkins 
+
+  // windev VM 에서 접속 확인 
+  http://192.168.15.30:8080
+     
+     관리자 패스워드 : 
+     sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+
+   -> Customize Jenkins ( install suggested plugin : 선택<<중요>> ) 
+   -> Create First Admin User   <==  skip <선택> 
+   .> Instance Configuration : http://192.168.15.30:8080/        <== save and finish
+   -> Jenkins is ready!   (완료) 
+
+    // 관리자 계정 패스워드 변경 :  amdin (오른쪽 상단)  ==> 설정 ==> password 변경 
+    admin    Pa$$w0rd 
+
+    ==============================
+    //도커 설치 
+    
+# Add Docker's official GPG key:    <== 도커를 설치하기위한 인증키 셋팅  
+  sudo apt-get update
+  sudo apt-get install ca-certificates curl
+  sudo install -m 0755 -d /etc/apt/keyrings
+  sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:   < == 도커를 다운받을 레파지토리 업데이트 
+
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt-get update
+
+
+// 도커 설치 
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+// 작동 확인 
+sudo docker run hello-world
+docker                        // 명령어 메뉴얼 잘 출력 
+sudo systemctl status docker 
+
+// 설치 완료후 작업 : 특정 사용자 계정에게 도커를 사용할 수 있도록 권한 부여 
+
+sudo groupadd docker
+sudo usermod -aG docker $USER
+
+# Log out and log back
+newgrp docker
+docker run hello-world
+
+// Security Issues 
+sudo chmod 666 /var/run/docker.sock 				or sudo chown root:docker /var/run/docker.sock
+sudo usermod -a -G docker jenkins
+
+// 확인 
+sudo cat /etc/group 
+   // docker 그룹에 user1, jenkins    계정이 포함. 
+
+// 도커 컨테이너 실행 : Docker HUB에서 nginx 최신 버전을 다운 받아서 컨테이너로 작동
+//   run   =>  pull , start   
+docker run -d -p 80:80 nginx
+
+// 컨테이너 정보 확인 
+docker ps
+
+// 다운받은 이미지 정보 확인 
+docker images 
+
+
+14. Docker Hub 에 회원 가입  : 도커 이미지가 저장된 레파지토리 
+
+    https://hub.docker.com/  		<== Public Repository :   도커 이미지 저장 
+
+15. AWS Ubuntu(22.4 LTS) VM : Docker Host (서비스)  <== 도커가 설치된 시스템, 공인 IP , 전 세계 모든 사용자에게 서비스 
+   https://aws.amazon.com/ko/ec2/
+
+
+
+16. Local System(Windows, Mac, Linux)  :  Doker Desktop (개발, 테스트) 
+  - STS4, VSCode  <== 도커 명령어 
+  - https://www.docker.com/products/docker-desktop/ 
+
+  - 요구 사항 : Hyper-v , WSL2    <== Windows Pro 
+  
+
+  // nginx 
+  docker run -d --name nginx_my -p 10001:80 nginx:latest  
+ 
+  // oracle XE 21C 
+  //  netstat -na | more     <=== Host OS의 포트가 사용중이지 않는 포트를 사용   : 5000이상 ~ 65535 의 임의의 포트 사용 
+  // 샘플 : docker run -d -p 1521:1521 -e ORACLE_PASSWORD=<your password> gvenzl/oracle-xe:latest
+  // system : 1234
+  docker run -d --name oracle-21c-my -p 10521:1521 -e ORACLE_PASSWORD=1234 gvenzl/oracle-xe:latest
+     // Oracle Developer : Oracle Server( TCP 1521 ) 에 접속해서 GUI 로 관리 
+
+  // MySQL 8.30 ,  root ,  1234
+  docker run --name mysql_8_3 -e MYSQL_ROOT_PASSWORD=1234 -d -p 30306:3306 mysql
+  
+  
+  
+
+
+
+
+
+17. Docker 명령어
+
+   // 도커 컨테이너의 상태를 확인
+         // 컨테이너 : 도커 이미지가 RAM 서비스되고 있는 상태  
+   docker ps 		// 실행 상태의 컨테이너를 출력 
+   docker ps -a          // 모든 컨테이너 출력 
+   docker start  <container ID>  or <container Name>  
+   docker stop  <container ID>  or <container Name>
+
+   // 도커 클라이언트(client) : docker 명령어를 사용 
+   // 도커 호스트 (Doker Host) : 클라이언트가 사용하는 명령어를 처리해서 컨테이너로 작동 ,  Docker Demon (서버스) 
+   // 도커 레지스트리 ( Docker Registry ) : 도커 이미지가 저장된 공간 , Public (Docker HUB )  , Private 
+
+   // 도커 이미지 확인 : 도커 허브에서 다운 받아온 이미지 확인 
+   docker images 
+
+   // docker pull : 도커 허브에서 이미지 다운 , 
+   docker pull nginx:latest
+
+   // docker build : 로컬의 도커 이미지로 부터 도커 컨테이너로 작동 
+   
+   // 도커 run  : 도커 hub 에서 이미지를 가지고(pull) 와서 실행(build) 
+    //  -d  : 백그라운드로 실행 
+    //  --name <컨테이너이름> : 컨테이너 이름 부여 
+    //  -p 호스트포트:컨테이이너포트    :  
+    //  nginx:latest   : 이미지 이름 , :latest  <== 최신 버젼, 생략 가능 
+
+   docker run -d --name nginx3 -p 8181:80 nginx:latest 
+
+   // 도커 컨테이너 삭제 : 
+   docker rm -f <container ID>  or <container Name>
+
+ 
+   // 도커 이미지 삭제
+   docker rmi 
+
+   // 도커 허브 : 도커 이미지가 저장된 곳 
+    http://hub.docker.com 
+
+
+  
+// Docker HUB의 자신의 레파지토리에 도커 이미지 Upload , 
+   hub.docker.com     repository 에 자신의 도커이미지를 upload 
+   
+   // 1. 로컬의 다운로드 받은 이미지 확인 
+   docker images -a
+
+   // 2. 도커 이미지 이름을 변경 : Tag 를 변경 ,    ID/이미지명:lastest 
+   docker tag nginx:latest kite01/nginx_my:8.3
+
+   // 3. 도커 허브 계정으로 로그인 
+   docker login 
+
+   // 4. 로컬의 레파지토리의 이미지를 docker Hub로 전송 
+   docker push kite01/nginx_my:8.3
+
+   // 5. hub.docker.com 접속후 repository 에 잘 전송이 되었는지 확인 
+   // 6. 사용 설명 문서 작성 
+    docker run -d --name nginx-my -p 80:80 kite01/nginx_my:8.3   
+
+
+// Dockerfile    : 도커 파일의 설정에 따라서 도커 이미지를 생성함.  :  docker build -t 이미명 . 
+	sbb 프로잭트를 도커 이미지를 생성==> Docker Hub에 전송 
+
+   //1.  sbb 프로잭트 Root 폴더에 Dockerfile
+   //2.  Dockerfile
+=========================================
+FROM openjdk:17
+ENV APP_HOME=/user/app/
+WORKDIR ${APP_HOME}
+COPY build/libs/*.jar sbb.jar
+EXPOSE 9797
+CMD ["java", "-jar", "sbb.jar"]
+========================================== 
+   //3. sbb 폴더의 build/libs/  의 모든 파일을 제거함.
+   //4. build  <== 개발 소스를 배포 파일로 생성    *.jar  (*class파일의 묶음)  ,   *.java ===컴파일 ==> *.class  
+       run ==> run configuration => Gradle Task => bootJar  배포 
+	// build/libs/프로잭트명-0.0.1-SNAPSHOT.jar 
+
+   //5. 도커 이미지 생성 : 도커 파일( Dockerfile ) 로 부터 도커 이미지 생성 
+       도커 파일이 존재하는 프로잭트 폴더로 이동 : 
+	cd "C:\WorkSpace-Test\my-app"
+	 
+	docker build -t my-app . 
+
+   //6. docker hub 에 도커 이미지를 push 하기전에 Tagging    
+	docker tag my-app:latest kite01/my-app:latest
+
+   //7. docker login 
+
+   //8. docker push kite01/my-app
+
+   //9. hub.docker.com : 도커허브의 자신의 레파지 토리에 전송되었는지 확인 
+
+   //9 실행 
+	docker run -d --name my-app -p 9797:9797 kite01/my-app
+
+  
+================================================================================================
+// 도커 컴포즈 : 설치가 되어있어야함. 
+   - docker-compose -v
+   - sudo apt  install docker-compose    // 도커 컴포즈 설치 
+
+   - 여러 개의 도커 이미지를 스크립트화 해서 한꺼번에 컨테이너로 작동 시킴 
+   - docker run   : 하나의 이미지만 컨터이너로 작동 시킴.
+   - docker-compose.yaml         <== 이름이  
+
+   cd "C:\docker_compose_test\test1" 폴더에 docker-compose.yaml 
+   ==============================================
+version: "3.7"
+
+services:
+  db:
+    image: mysql:5.7
+    volumes:
+      - ./db_data:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress_user
+      MYSQL_PASSWORD: 1234
+ 
+  app:
+    depends_on:
+      - db
+    image: wordpress:latest
+    volumes:
+      - ./app_data:/var/www/html
+    ports:
+      - "8080:80"
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DB_USER: wordpress_user
+      WORDPRESS_DB_PASSWORD: 1234
+   ===============================================   
+
+  // 도커 컴포즈 실행 : docker-compose.yaml 
+  docker-compose up -d 
+
+
+===============================================================================
+// GitLab 과 Jenkins 연동 
+
+// 1. Jenkins 관리페이지에서 Plugin 이 구성 :  
+	GitLab, Docker, Docker Pipleline, Maven Integration , grade repository, gradle demon save, ssh Pipeline Steps
+
+// 2. Jenkins 시스템에 추가적 프로그램 설치 
+    sudo apt-get install -y git maven gradle 
+   
+
+// 3. gitlab 시스템에서
+     -- Admin area ==> Outbound requests => Allow requests to the local network from webhooks and integrations ( 체크 ) 
+     -- access token 생성 
+       왼쪽 상단 계정 아이콘 클릭 => preperance => access token 생성 
+	  토큰이름 : MyGitLab_Access_Token  
+	  만료 날짜 : 2025.03.28 
+          권한      : 모든 권한 
+	  암호      : 
+
+		MyGitLab_Access_Token :     
+// 4. Jenkins 에서 gitlab 과 연동 
+      Dashboard  ==> Jenkins 관리 ==> System  ==> GitLab 
+	 Connection name : MyGitLab
+	 GitLab host URL : http://192.168.15.20
+         Credentials : 
+// 5.  
+
+	Docker Hub 의 토큰 : 
+
+
+
+// Hook Setting : Jenkins 가 GitLab의 특정 레파지토리의 소스를 가지고 옮 (자동으로 가지고 옮.)  
+
+1. Jenkins 시스템의 JOB 을 생성후 : webhook URL :  
+  - 새로운 아이템 
+
+2. GitLab  : 해당 project 의 setting ==> webhook 
+
+
+
+
+// jenkinsfile_MyAppDockerComposeDeployJob  파일 실습 
+
+windev 에서 STS4에서 프로잭트명 , 빌드툴   : myapp , maven 
+   - myapp  프로잭트 Root 에  
+	Dockerfile , docker-compose.yml 
+
+
+GitLab 에서 레파지토리 생성 : myapp
+
+
+jenkins 에서 Credential 
+   - gitlab_idpwd   : gitlab root 계정으로 접속한 credential 
+   - dockerlogin    : Docker Hub 의 접속 계정 
+
+   - JOB 생성 : myapp-job   (pipleline job) 
+
+
+<실습 : >   
+myapp03 프로잭트를 생성해서 git 레파지토리에 upload 시 build, docker img , docker compose 를 실행해서 - 컨테이너로 로드 
+  1. 프로잭트 생성, maven 
+	- 8086 포트 사용 
+  2. Dockerfile, docker-compose.yml
+  3. gitLab 에서 레파지토리 생성  , hook setting 
+  4. Jenkins 에서 pileLine Job 생성 
+      -- pipeLine Script 를 생성 해서 작동... 
+
+
+	
+   
+
+
+
+
+
+     
+
+
+===============================
+// 컴퓨터이름 ==> ip Address 정보 매핑 
+cat /etc/hosts 
+
+//k8s 관련 명령어
+kubectl		: 쿠버네티스 클러스터를 관리하는 명령어 
+kubectl get nodes    : 클러스터 내의 노드를 확인 하는 명령어 
+kubectl get nodes -o wide   : 자세한 정보를 출력 	
+
+kubectl describe node k8s-control   : 특정 지정한 노트의 아주 자세한 정보를 출력  
+kubectl describe node k8s-1
+
+// 쿠버네티스는 pod 단위로 컨테이너를 배포함. 
+kubectl get pods 		: 쿠버네티스에 배포되는 컨테이너의 묶음 
+kubectl get pods -o wide    : pod 의 자세한 정보를 출력. 파드에 부여된 IP, pod가 배포된 노트 
+
+// 특정해둔 deploy의 파드 확인 
+kubectl get pod argocd-application-controller-0 -o wide
+
+
+ 
+실습할 VM 
+===========================================================================================================================
+Server Role		Server_Hostname	Specs					IP Address	Host Port
+============================================================================================================================
+Windows Clinet		windev	2 vCPU, 4 GB RAM, 100GB Disk EACH		192.168.15.10	
+GitLab Community Server	gitlab	2 vCPU, 4 GB RAM, 100GB Disk EACH		192.168.15.20	22020
+Jenkins & Docker		jenkins	2 vCPU, 4 GB RAM(or 4 vCPU, 8GB), 100B Disk EACH	192.168.15.30	22030
+Master Node		k8s-control	2 vCPU, 4 GB RAM, 100GB Disk EACH	192.168.15.93	22093
+Worker Node #1		k8s-1	2 vCPU, 4 GB RAM, 100GB Disk EACH		192.168.15.94	22094
+Worker Node #2		k8s-2	2 vCPU, 4 GB RAM, 100B Disk EACH			192.168.15.95	22095
+===========================================================================================================================
+
+
+
+
+
+
